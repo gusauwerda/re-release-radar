@@ -13,18 +13,22 @@ custom:
    app: app.app
    packRequirements: false
 functions:
- app:
-   handler: "wsgi_handler.handler"
-   timeout: 30
-   environment:
-    SPOTIPY_CLIENT_ID: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_ID}
-    SPOTIPY_CLIENT_SECRET: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_SECRET}
-    SPOTIPY_REDIRECT_URI: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_REDIRECT_URI}
-    FLASK_CONFIG: ${file(./config.${opt:stage, 'dev'}.json):FLASK_CONFIG}
-    FLASK_APP: ${file(./config.${opt:stage, 'dev'}.json):FLASK_APP}
-    STAGE: ${file(./config.${opt:stage, 'dev'}.json):STAGE}
-    SESSION_SECRET_KEY: ${file(./config.${opt:stage, 'dev'}.json):SESSION_SECRET_KEY}
-    REQUIRED_SCOPES: ${file(./config.${opt:stage, 'dev'}.json):REQUIRED_SCOPES}
+  cronRefreshPlaylist:
+   handler: app.auto_refresh_playlist
    events:
-     - http: ANY /
-     - http: 'ANY {proxy+}'
+     - schedule: rate(2 minutes)
+  app:
+    handler: "wsgi_handler.handler"
+    timeout: 60
+    environment:
+      SPOTIPY_CLIENT_ID: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_ID}
+      SPOTIPY_CLIENT_SECRET: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_SECRET}
+      SPOTIPY_REDIRECT_URI: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_REDIRECT_URI}
+      FLASK_CONFIG: ${file(./config.${opt:stage, 'dev'}.json):FLASK_CONFIG}
+      FLASK_APP: ${file(./config.${opt:stage, 'dev'}.json):FLASK_APP}
+      STAGE: ${file(./config.${opt:stage, 'dev'}.json):STAGE}
+      SESSION_SECRET_KEY: ${file(./config.${opt:stage, 'dev'}.json):SESSION_SECRET_KEY}
+      REQUIRED_SCOPES: ${file(./config.${opt:stage, 'dev'}.json):REQUIRED_SCOPES}
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'

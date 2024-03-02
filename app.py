@@ -10,16 +10,28 @@ from flask import (
 )
 from dotenv import load_dotenv
 
+from flask_apscheduler import APScheduler
+from flask_session import Session
+
 load_dotenv()
 
 app = Flask(__name__)
 
-app.secret_key = 'SOMETHING-RANDOM'
+app.secret_key = 'super secret key'
+app.config['SESSION_TYPE'] = 'filesystem'
+
 app.config['SESSION_COOKIE_NAME'] = 'spotify-login-session'
+app.config['SESSION_FILE_DIR'] = '/tmp'
+app.config['SESSION_TYPE'] = 'filesystem'
+
+Session(app)
 
 GENERATED_PLAYLIST_NAME = 'Re-released Radar'
 GENERATED_PLAYLIST_DESCRIPTION = "Re-release my radar with unknown music this time."
 IDS = []
+CACHED_TOKENS = []
+track_ids = []
+
 
 @app.route('/')
 def login():
@@ -32,17 +44,24 @@ def login():
         return "Error: client_id and client_secret required"
     
     auth_url = sp_oauth.get_authorize_url()
-    print(auth_url)
     return redirect(auth_url)
 
 
-@app.route('/authorize'.format(os.environ.get('STAGE')))
+@app.route('/authorize')
 def authorize():
     sp_oauth = create_spotify_oauth()
-    session.clear()
+
+    if (session.get('token_info')):
+        session.pop('token_info')
+
     code = request.args.get('code')
-    token_info = sp_oauth.get_access_token(code)
+
+    token_info = sp_oauth.get_access_token(code, check_cache=False)
+
     session["token_info"] = token_info
+
+    CACHED_TOKENS.append(token_info)
+
     return redirect('/{}/update-playlist'.format(os.environ.get('STAGE')))
 
 
@@ -53,8 +72,10 @@ def seed_genres():
 
 
 @app.route('/update-playlist'.format(os.environ.get('STAGE')))
-def create_re_radar():
-    sp = get_sp()
+def create_re_radar(sp=None):
+
+    if (sp == None):
+        sp = get_sp()
 
     get_all_liked_songs()
 
@@ -63,6 +84,7 @@ def create_re_radar():
 
     recommendations = sp.recommendations(seed_tracks=seed_tracks, limit=20)
     track_ids = []
+
     skipped = 0
     for track in recommendations['tracks']:
         if (track['id'] in IDS):
@@ -73,7 +95,8 @@ def create_re_radar():
 
     update_playlist(playlist_id=playlist_id, track_ids=track_ids)
 
-    return "Your playlist has been updated with {} new tracks. We skipped {} tracks your already like".format(len(track_ids), skipped)
+    return "Complete"
+
 
 def update_playlist(playlist_id, track_ids):
     sp = get_sp()
@@ -130,11 +153,19 @@ def get_or_create_playlist():
             
 def get_sp():
     session['token_info'], authorized = get_token()
-    session.modified = True
     if not authorized:
         return redirect('/')
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
     return sp
+
+
+def auto_refresh_playlist():
+    for token in CACHED_TOKENS:
+        print('Refreshing playlist for {}'.format(token))
+        sp_oauth = create_spotify_oauth()
+        token = sp_oauth.refresh_access_token(token)
+        sp = spotipy.Spotify(auth=token)
+        create_re_radar(sp)
 
 
 def get_token():
@@ -157,9 +188,14 @@ def get_token():
 
 
 def create_spotify_oauth(client_id=os.getenv('SPOTIPY_CLIENT_ID'), client_secret=os.getenv('SPOTIPY_CLIENT_SECRET')):
+
     return SpotifyOAuth(
         scope='playlist-modify-public,playlist-modify-private,user-library-read',
         redirect_uri=url_for('authorize', _external=True),
         client_id=client_id,
         client_secret=client_secret,
+        cache_path='/tmp/.cache'
     )
+
+if __name__ == '__main__':
+    app.run()
