@@ -102,6 +102,7 @@ def create_re_release_radar_playlist(sp=None):
 
     print("Updating playlist for {}".format(sp.current_user()["display_name"]))
     playlist.update(sp, playlist_id=playlist_id, track_ids=track_ids)
+    playlist.set_image(sp, playlist_id)
 
     return "Completed playlist update for {}".format(sp.current_user()["display_name"])
 

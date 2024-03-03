@@ -1,4 +1,7 @@
 from spotipy import Spotify
+import base64
+import os
+
 
 class Playlist:
 
@@ -31,3 +34,11 @@ class Playlist:
         )
 
         return playlist["id"]
+
+    def set_image(self, sp, playlist_id):
+
+        print(os.listdir())
+
+        with open("./src/resources/cover_image.jpg", "rb") as image_file:
+            image_b64 = base64.b64encode(image_file.read())
+            sp.playlist_upload_cover_image(playlist_id, image_b64)
