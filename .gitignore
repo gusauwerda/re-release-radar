@@ -8,3 +8,4 @@ config.*.json
 reload_env.sh
 .reload_env
 *.pyc
+.env
