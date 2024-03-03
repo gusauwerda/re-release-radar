@@ -30,6 +30,7 @@ custom:
 functions:
   cronRefreshPlaylist:
     handler: app.auto_refresh_playlist
+    timeout: 60
     environment:
       SPOTIPY_CLIENT_ID: ${file(./config/config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_ID}
       SPOTIPY_CLIENT_SECRET: ${file(./config/config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_SECRET}
