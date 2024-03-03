@@ -14,6 +14,8 @@ from flask_session import Session
 import boto3
 from boto3.dynamodb.types import TypeDeserializer
 
+from src.database.dynamo import DynamoDB
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -32,7 +34,8 @@ GENERATED_PLAYLIST_DESCRIPTION = "Re-release my radar with unknown music this ti
 IDS = []
 track_ids = []
 
-dynamodb_client = boto3.client("dynamodb")
+
+dynamodb = DynamoDB(boto3.client("dynamodb"))
 
 USERS_TABLE = os.environ["USERS_TABLE"]
 
@@ -66,17 +69,9 @@ def authorize():
     session["token_info"] = token_info
     sp = get_sp()
 
-    update_db(sp.current_user()["display_name"], token_info)
+    dynamodb.update(sp.current_user()["display_name"], token_info)
 
     return redirect("/{}/update-playlist".format(os.environ.get("STAGE")))
-
-
-def update_db(display_name, token_info):
-    if not os.environ.get("LOCAL_ENV"):
-        dynamodb_client.put_item(
-            TableName=USERS_TABLE,
-            Item={"userId": {"S": display_name}, "token_info": {"S": str(token_info)}},
-        )
 
 
 @app.route("/seed-genres")
@@ -183,7 +178,7 @@ def get_or_create_playlist(sp, playlist_name, playlist_description):
 
 @app.route("/view-db")
 def test_db_items():
-    paginator = dynamodb_client.get_paginator("scan")
+    paginator = dynamodb.dynamodb_client.get_paginator("scan")
     response_iterator = paginator.paginate(TableName=USERS_TABLE)
     for page in response_iterator:
         
@@ -205,7 +200,7 @@ def get_sp():
 def auto_refresh_albums(event, context):
 
     with app.app_context():
-        paginator = dynamodb_client.get_paginator("scan")
+        paginator = dynamodb.dynamodb_client.get_paginator("scan")
 
         response_iterator = paginator.paginate(TableName=USERS_TABLE)
 
@@ -231,7 +226,7 @@ def auto_refresh_albums(event, context):
                     )
                     user = sp.current_user()["display_name"]
                     print("Refreshed token_info for {}", user)
-                    update_db(user, token_info)
+                    dynamodb.update(user, token_info)
 
                 sp = spotipy.Spotify(auth=token_info.get("access_token"))
 
@@ -243,7 +238,7 @@ def auto_refresh_playlist(event, context):
 
     with app.app_context():
 
-        paginator = dynamodb_client.get_paginator("scan")
+        paginator = dynamodb.dynamodb_client.get_paginator("scan")
         response_iterator = paginator.paginate(TableName=USERS_TABLE)
 
         for page in response_iterator:
