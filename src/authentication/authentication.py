@@ -38,7 +38,7 @@ class Authentication:
     ):  
         if os.environ.get('LOCAL_DEV'):
             return SpotifyOAuth(
-                scope="playlist-modify-public,playlist-modify-private,user-library-read,ugc-image-upload",
+                scope="playlist-modify-public,playlist-modify-private,user-library-read",
                 redirect_uri=url_for('authorize', _external=True),
                 client_id=client_id,
                 client_secret=client_secret,
@@ -53,7 +53,7 @@ class Authentication:
 
         with app.app_context():
             return SpotifyOAuth(
-                scope="playlist-modify-public,playlist-modify-private,user-library-read,ugc-image-upload",
+                scope="playlist-modify-public,playlist-modify-private,user-library-read",
                 redirect_uri=redirect_uri,
                 client_id=client_id,
                 client_secret=client_secret,
