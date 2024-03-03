@@ -19,7 +19,7 @@ provider:
           Resource:
             - Fn::GetAtt: [UsersTable, Arn]
   environment:
-    USERS_TABLE: ${file(./config.${opt:stage, 'dev'}.json):USERS_TABLE}
+    USERS_TABLE: ${file(./config/config.${opt:stage, 'dev'}.json):USERS_TABLE}
 plugins:
   - serverless-wsgi
   - serverless-python-requirements
@@ -31,30 +31,30 @@ functions:
   cronRefreshPlaylist:
     handler: app.auto_refresh_playlist
     environment:
-      SPOTIPY_CLIENT_ID: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_ID}
-      SPOTIPY_CLIENT_SECRET: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_SECRET}
-      SPOTIPY_REDIRECT_URI: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_REDIRECT_URI}
-      FLASK_CONFIG: ${file(./config.${opt:stage, 'dev'}.json):FLASK_CONFIG}
-      FLASK_APP: ${file(./config.${opt:stage, 'dev'}.json):FLASK_APP}
-      STAGE: ${file(./config.${opt:stage, 'dev'}.json):STAGE}
-      SESSION_SECRET_KEY: ${file(./config.${opt:stage, 'dev'}.json):SESSION_SECRET_KEY}
-      REQUIRED_SCOPES: ${file(./config.${opt:stage, 'dev'}.json):REQUIRED_SCOPES}
-      SERVER: ${file(./config.${opt:stage, 'dev'}.json):SERVER}
+      SPOTIPY_CLIENT_ID: ${file(./config/config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_ID}
+      SPOTIPY_CLIENT_SECRET: ${file(./config/config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_SECRET}
+      SPOTIPY_REDIRECT_URI: ${file(./config/config.${opt:stage, 'dev'}.json):SPOTIPY_REDIRECT_URI}
+      FLASK_CONFIG: ${file(./config/config.${opt:stage, 'dev'}.json):FLASK_CONFIG}
+      FLASK_APP: ${file(./config/config.${opt:stage, 'dev'}.json):FLASK_APP}
+      STAGE: ${file(./config/config.${opt:stage, 'dev'}.json):STAGE}
+      SESSION_SECRET_KEY: ${file(./config/config.${opt:stage, 'dev'}.json):SESSION_SECRET_KEY}
+      REQUIRED_SCOPES: ${file(./config/config.${opt:stage, 'dev'}.json):REQUIRED_SCOPES}
+      SERVER: ${file(./config/config.${opt:stage, 'dev'}.json):SERVER}
     events:
       - schedule: rate(1 hour)
   app:
     handler: "wsgi_handler.handler"
     timeout: 60
     environment:
-      SPOTIPY_CLIENT_ID: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_ID}
-      SPOTIPY_CLIENT_SECRET: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_SECRET}
-      SPOTIPY_REDIRECT_URI: ${file(./config.${opt:stage, 'dev'}.json):SPOTIPY_REDIRECT_URI}
-      FLASK_CONFIG: ${file(./config.${opt:stage, 'dev'}.json):FLASK_CONFIG}
-      FLASK_APP: ${file(./config.${opt:stage, 'dev'}.json):FLASK_APP}
-      STAGE: ${file(./config.${opt:stage, 'dev'}.json):STAGE}
-      SESSION_SECRET_KEY: ${file(./config.${opt:stage, 'dev'}.json):SESSION_SECRET_KEY}
-      REQUIRED_SCOPES: ${file(./config.${opt:stage, 'dev'}.json):REQUIRED_SCOPES}
-      SERVER: ${file(./config.${opt:stage, 'dev'}.json):SERVER}
+      SPOTIPY_CLIENT_ID: ${file(./config/config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_ID}
+      SPOTIPY_CLIENT_SECRET: ${file(./config/config.${opt:stage, 'dev'}.json):SPOTIPY_CLIENT_SECRET}
+      SPOTIPY_REDIRECT_URI: ${file(./config/config.${opt:stage, 'dev'}.json):SPOTIPY_REDIRECT_URI}
+      FLASK_CONFIG: ${file(./config/config.${opt:stage, 'dev'}.json):FLASK_CONFIG}
+      FLASK_APP: ${file(./config/config.${opt:stage, 'dev'}.json):FLASK_APP}
+      STAGE: ${file(./config/config.${opt:stage, 'dev'}.json):STAGE}
+      SESSION_SECRET_KEY: ${file(./config/config.${opt:stage, 'dev'}.json):SESSION_SECRET_KEY}
+      REQUIRED_SCOPES: ${file(./config/config.${opt:stage, 'dev'}.json):REQUIRED_SCOPES}
+      SERVER: ${file(./config/config.${opt:stage, 'dev'}.json):SERVER}
     events:
       - http: ANY /
       - http: "ANY {proxy+}"
@@ -72,4 +72,4 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        TableName: ${file(./config.${opt:stage, 'dev'}.json):USERS_TABLE}
+        TableName: ${file(./config/config.${opt:stage, 'dev'}.json):USERS_TABLE}
