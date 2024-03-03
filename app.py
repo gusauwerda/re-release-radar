@@ -36,6 +36,7 @@ dynamodb_client = boto3.client("dynamodb")
 
 USERS_TABLE = os.environ["USERS_TABLE"]
 
+
 @app.route("/")
 def login():
     client_id = os.environ.get("SPOTIPY_CLIENT_ID")
@@ -68,7 +69,13 @@ def authorize():
 
     update_db(sp.current_user()["display_name"], token_info)
 
-    return redirect("/{}/update-playlist".format(os.environ.get("STAGE")))
+    redirect_location = (
+        "/update-playlist"
+        if os.environ.get("LOCAL_DEV")
+        else "/{}/update-playlist".format(os.environ.get("STAGE"))
+    )
+
+    return redirect(redirect_location)
 
 
 def update_db(display_name, token_info):
@@ -85,7 +92,7 @@ def seed_genres():
     return sp.recommendation_genre_seeds()
 
 
-@app.route("/update-playlist".format(os.environ.get("STAGE")))
+@app.route("/update-playlist")
 def create_re_release_radar_playlist(sp=None):
 
     if sp == None:
@@ -129,6 +136,10 @@ def update_playlist(sp, playlist_id, track_ids):
     if sp == None:
         sp = get_sp()
     sp.playlist_replace_items(playlist_id=playlist_id, items=track_ids)
+
+
+def update_playlist_image():
+    pass
 
 
 def get_seed_tracks(sp, number_of_tracks):
@@ -186,7 +197,7 @@ def test_db_items():
     paginator = dynamodb_client.get_paginator("scan")
     response_iterator = paginator.paginate(TableName=USERS_TABLE)
     for page in response_iterator:
-        
+
         for item in page["Items"]:
             deserializer = TypeDeserializer()
             user_data = {k: deserializer.deserialize(v) for k, v in item.items()}
@@ -293,9 +304,21 @@ def create_spotify_oauth(
     client_id=os.getenv("SPOTIPY_CLIENT_ID"),
     client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
 ):
+
+    if os.environ.get("LOCAL_DEV"):
+        return SpotifyOAuth(
+            scope="playlist-modify-public,playlist-modify-private,user-library-read",
+            redirect_uri=url_for("authorize", _external=True),
+            client_id=client_id,
+            client_secret=client_secret,
+            cache_path="/tmp/.cache",
+        )
+
     app.config["PREFERRED_URL_SCHEME"] = "https"
     app.config["SERVER_NAME"] = os.environ.get("SERVER")
-    redirect_uri = 'https://{}/{}/authorize'.format(os.environ.get("SERVER"), os.environ.get("STAGE"))
+    redirect_uri = "https://{}/{}/authorize".format(
+        os.environ.get("SERVER"), os.environ.get("STAGE")
+    )
 
     with app.app_context():
         return SpotifyOAuth(
