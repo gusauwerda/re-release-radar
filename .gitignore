@@ -1,0 +1,10 @@
+flask_session
+node_modules
+cache-dir
+.serverless
+.__pycache__
+.cache
+config.*.json
+reload_env.sh
+.reload_env
+*.pyc
