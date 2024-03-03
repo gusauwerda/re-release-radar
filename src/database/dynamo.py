@@ -1,6 +1,5 @@
 import os
 
-
 class DynamoDB:
 
     def __init__(self, dynamodb_client):
