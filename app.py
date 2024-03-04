@@ -20,7 +20,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.secret_key = os.environ.get('SESSION_SECRET_KEY')
+app.secret_key = os.environ.get("SESSION_SECRET_KEY")
 app.config["SESSION_TYPE"] = "filesystem"
 
 app.config["SESSION_COOKIE_NAME"] = "spotify-login-session"
@@ -40,7 +40,6 @@ playlist = Playlist(authentication)
 helpers = Helpers(authentication)
 
 USERS_TABLE = os.environ["USERS_TABLE"]
-CURRENT_USER = ""
 
 
 @app.route("/")
@@ -91,13 +90,16 @@ def create_re_release_radar_playlist(sp=None, seed_tracks=None):
         sp = authentication.get_sp()
 
     if seed_tracks == None:
-        seed_tracks = helpers.get_seed_tracks(sp, 5)
+        seed_tracks: list = helpers.get_seed_tracks(sp, 5)
+    else:
+        seed_tracks = seed_tracks.strip("[]").replace("'", "").split(", ")
 
     playlist_id = playlist.get_or_create(
         sp, GENERATED_PLAYLIST_NAME, GENERATED_PLAYLIST_DESCRIPTION
     )
 
     recommendations = sp.recommendations(seed_tracks=seed_tracks, limit=20)
+
     track_ids = []
 
     for track in recommendations["tracks"]:
@@ -108,12 +110,12 @@ def create_re_release_radar_playlist(sp=None, seed_tracks=None):
     playlist.update(sp, playlist_id=playlist_id, track_ids=track_ids)
     print("{}: Playlist updated".format(current_user_name))
 
-    dynamodb.update(current_user_name, session["token_info"], seed_tracks)
+    dynamodb.update(current_user_name, session["token_info"], seed_tracks=seed_tracks)
 
     return render_template("signup.html")
 
 
-def auto_refresh_playlist(event, context):
+def auto_refresh_playlist():
 
     with app.app_context():
 
@@ -126,7 +128,7 @@ def auto_refresh_playlist(event, context):
                 deserializer = TypeDeserializer()
                 user_data = {k: deserializer.deserialize(v) for k, v in item.items()}
                 token_info = eval(user_data.get("token_info"))
-                seed_tracks = list(user_data.get("seed_tracks").split(" "))
+                seed_tracks: list = user_data.get("seed_tracks")
 
                 is_token_expired = token_info.get("expires_in") - int(time.time()) < 60
                 if is_token_expired:
