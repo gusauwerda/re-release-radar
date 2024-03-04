@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up Complete</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff; /* White background */
+            color: #ffffff; /* White text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .circle {
+            width: 400px; /* Twice the current size */
+            height: 400px; /* Twice the current size */
+            border-radius: 50%;
+            background-color: #1DB954; /* Spotify green */
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center content vertically */
+            align-items: center; /* Center content horizontally */
+            padding: 40px; /* Twice the current padding */
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.4); /* More visible shadow */
+            transform: perspective(1000px) rotateX(-10deg); /* 3D effect */
+        }
+
+        h1, p {
+            margin: 0; /* Remove default margin */
+            color: #ffffff; /* Dark gray text */
+            text-align: center; /* Align text to center */
+            line-height: 1.5; /* Increase line height */
+        }
+    </style>
+</head>
+<body>
+    <div class="circle">
+        <h1>Re-released Radar</h1>
+        <p>It refreshes every hour.</p>
+    </div>
+</body>
+</html>
