@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .login-button {
+            background-color: #1db954;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            font-weight: bold; /* Make link text bold */
+            width: 200px; /* Adjust button width */
+            height: 200px; /* Make button a circle */
+            border: none;
+            border-radius: 50%; /* Make button a circle */
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); /* Add box shadow */
+            transition: background-color 0.3s ease;
+        }
+
+        .login-button:hover {
+            background-color: #17a14a;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="{{stage}}/login" class="login-button">Login</a>
+
+</body>
+
+</html>
