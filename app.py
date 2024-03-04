@@ -83,7 +83,7 @@ def authorize():
     return redirect(redirect_uri)
 
 
-@app.route("/update-playlist".format(os.environ.get("STAGE")))
+@app.route("/update-playlist")
 def create_re_release_radar_playlist(sp=None, seed_tracks=None):
 
     if sp == None:
@@ -110,12 +110,10 @@ def create_re_release_radar_playlist(sp=None, seed_tracks=None):
     playlist.update(sp, playlist_id=playlist_id, track_ids=track_ids)
     print("{}: Playlist updated".format(current_user_name))
 
-    dynamodb.update(current_user_name, session["token_info"], seed_tracks=seed_tracks)
-
     return render_template("signup.html")
 
 
-def auto_refresh_playlist():
+def auto_refresh_playlist(event, context):
 
     with app.app_context():
 
@@ -142,7 +140,7 @@ def auto_refresh_playlist():
                     dynamodb.update(
                         sp.current_user()["display_name"],
                         token_info,
-                        seed_tracks=str(seed_tracks),
+                        seed_tracks=seed_tracks,
                     )
 
                 create_re_release_radar_playlist(sp, seed_tracks=seed_tracks)
