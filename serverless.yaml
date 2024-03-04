@@ -44,7 +44,7 @@ functions:
     events:
       - schedule:
           rate: cron(* 7-17 ? * * *)
-          enabled: false
+          enabled: true
   app:
     handler: "wsgi_handler.handler"
     timeout: 60
