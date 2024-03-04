@@ -42,7 +42,9 @@ functions:
       REQUIRED_SCOPES: ${file(./config/config.${opt:stage, 'dev'}.json):REQUIRED_SCOPES}
       SERVER: ${file(./config/config.${opt:stage, 'dev'}.json):SERVER}
     events:
-      - schedule: rate(1 hour)
+      - schedule:
+          rate: cron(* 7-17 ? * * *)
+          enabled: false
   app:
     handler: "wsgi_handler.handler"
     timeout: 60
