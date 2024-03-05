@@ -40,6 +40,7 @@ playlist = Playlist(authentication)
 helpers = Helpers(authentication)
 
 USERS_TABLE = os.environ["USERS_TABLE"]
+SEED_TRACK_EXPIRY_ENABLED = False
 
 
 @app.route("/")
@@ -153,17 +154,25 @@ def auto_refresh_playlist(event, context):
                 sp = spotipy.Spotify(auth=token_info.get("access_token"))
                 current_user_name = sp.current_user()["display_name"]
 
-                if seed_track_expiry != None:
-                    if int(time.time()) - seed_track_expiry > 86400:
-                        print(
-                            "Seed tracks have expired for {}".format(current_user_name)
-                        )
-                        seed_tracks = helpers.get_seed_tracks(sp, 5)
-                        print("Seed tracks have been refreshed")
+                try:
+                    seed_tracks = helpers.get_seed_tracks(sp, 5)
+                except:
+                    seed_tracks = user_data.get("seed_tracks")
+
+                if SEED_TRACK_EXPIRY_ENABLED:
+                    if seed_track_expiry != None:
+                        if int(time.time()) - seed_track_expiry > 86400:
+                            print(
+                                "Seed tracks have expired for {}".format(
+                                    current_user_name
+                                )
+                            )
+                            seed_tracks = helpers.get_seed_tracks(sp, 5)
+                            print("Seed tracks have been refreshed")
+                            seed_track_expiry = int(time.time()) + 86400
+                            time.sleep(30)
+                    else:
                         seed_track_expiry = int(time.time()) + 86400
-                        time.sleep(30)
-                else:
-                    seed_track_expiry = int(time.time()) + 86400
 
                 if is_token_expired:
                     dynamodb.update(
