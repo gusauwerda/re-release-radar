@@ -92,7 +92,8 @@ def create_re_release_radar_playlist(sp=None, seed_tracks=None):
     if seed_tracks == None:
         seed_tracks: list = helpers.get_seed_tracks(sp, 5)
     else:
-        seed_tracks = seed_tracks.strip("[]").replace("'", "").split(", ")
+        if type(seed_tracks) == str:
+            seed_tracks = seed_tracks.strip("[]").replace("'", "").split(", ")
 
     playlist_id = playlist.get_or_create(
         sp, GENERATED_PLAYLIST_NAME, GENERATED_PLAYLIST_DESCRIPTION
@@ -105,10 +106,15 @@ def create_re_release_radar_playlist(sp=None, seed_tracks=None):
     for track in recommendations["tracks"]:
         track_ids.append(track["id"])
 
-    current_user_name = sp.current_user()["display_name"]
-
     playlist.update(sp, playlist_id=playlist_id, track_ids=track_ids)
-    print("{}: Playlist updated".format(current_user_name))
+    print("{}: Playlist updated".format(sp.current_user()["display_name"]))
+
+    dynamodb.update(
+        sp.current_user()["display_name"],
+        session["token_info"],
+        seed_tracks=seed_tracks,
+        seed_track_expiry=int(time.time()) + 86400,
+    )
 
     return render_template("signup.html")
 
@@ -126,7 +132,12 @@ def auto_refresh_playlist(event, context):
                 deserializer = TypeDeserializer()
                 user_data = {k: deserializer.deserialize(v) for k, v in item.items()}
                 token_info = eval(user_data.get("token_info"))
-                seed_tracks: list = user_data.get("seed_tracks")
+                seed_tracks = user_data.get("seed_tracks")
+
+                seed_track_expiry = None
+
+                if user_data.get("seed_track_expiry") != None:
+                    seed_track_expiry = user_data.get("seed_track_expiry")
 
                 is_token_expired = token_info.get("expires_in") - int(time.time()) < 60
                 if is_token_expired:
@@ -136,11 +147,21 @@ def auto_refresh_playlist(event, context):
                     )
 
                 sp = spotipy.Spotify(auth=token_info.get("access_token"))
+
+                if seed_track_expiry != None:
+                    if int(time.time()) > seed_track_expiry + 86400:
+                        seed_tracks = helpers.get_seed_tracks(sp, 5)
+                        seed_track_expiry = int(time.time()) + 86400
+                        time.sleep(30)
+                else:
+                    seed_track_expiry = int(time.time()) + 86400
+
                 if is_token_expired:
                     dynamodb.update(
                         sp.current_user()["display_name"],
                         token_info,
                         seed_tracks=seed_tracks,
+                        seed_track_expiry=seed_track_expiry,
                     )
 
                 create_re_release_radar_playlist(sp, seed_tracks=seed_tracks)

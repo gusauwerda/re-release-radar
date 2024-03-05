@@ -5,7 +5,7 @@ class DynamoDB:
     def __init__(self, dynamodb_client):
         self.dynamodb_client = dynamodb_client
 
-    def update(self, display_name, token_info, seed_tracks):
+    def update(self, display_name, token_info, seed_tracks, seed_track_expiry):
         if not os.environ.get("LOCAL_ENV"):
             self.dynamodb_client.put_item(
                 TableName=os.environ.get("USERS_TABLE"),
@@ -13,5 +13,6 @@ class DynamoDB:
                     "userId": {"S": display_name},
                     "token_info": {"S": str(token_info)},
                     "seed_tracks": {"S": str(seed_tracks)},
+                    "seed_track_expiry": {"N": str(seed_track_expiry)}
                 },
             )
